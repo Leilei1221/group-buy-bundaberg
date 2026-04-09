@@ -302,14 +302,13 @@ async function submitOrder() {
   const btn = document.getElementById('submit-btn');
   btn.disabled = true; btn.textContent = '送出中…';
 
-  const items = PRODUCTS.filter(p => qty[p.id] > 0)
-    .map(p => `${p.name}×${qty[p.id]}份`).join('、');
   const note = document.getElementById('note-input').value.trim();
+  const summary = PRODUCTS.filter(p => qty[p.id] > 0)
+    .map(p => `${p.name}×${qty[p.id]}瓶`).join('、');
 
-  const params = new URLSearchParams({
-    name, items, total: totalPrice(), note,
-    timestamp: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
-  });
+  const params = new URLSearchParams({ name, summary, total: totalPrice(), note });
+  // 每個口味數量獨立傳送（對應 GAS 各欄）
+  PRODUCTS.forEach(p => { if (qty[p.id] > 0) params.append(p.id, qty[p.id]); });
 
   try {
     await fetch(GAS_URL, { method: 'POST', body: params, mode: 'no-cors' });
@@ -319,7 +318,7 @@ async function submitOrder() {
   document.getElementById('order-section').style.display = 'none';
   document.getElementById('float-bar').classList.remove('show');
   const detail = PRODUCTS.filter(p=>qty[p.id]>0)
-    .map(p=>`• ${p.name} × ${qty[p.id]} 份　$${(p.price*qty[p.id]).toLocaleString()}`).join('\n');
+    .map(p=>`• ${p.name} × ${qty[p.id]} 瓶　$${(p.price*qty[p.id]).toLocaleString()}`).join('\n');
   const copyTxt = `${name} 你好！\n訂購明細：\n${detail}\n合計：$${totalPrice().toLocaleString()}${note?'\n備註：'+note:''}`;
   document.getElementById('copy-text').textContent = copyTxt;
   const suc = document.getElementById('success-section');
