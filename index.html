@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BUNDABERG 賓德寶氣泡飲 同事團購</title>
+<style>
+  :root {
+    --primary: #1a5c2a;
+    --amber: #c8860a;
+    --bg: #f4faf5;
+    --card-bg: #ffffff;
+    --text: #1a2e1a;
+    --muted: #5a7060;
+    --border: #c8e0cc;
+    --badge: #e8f5ea;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans TC', sans-serif;
+    background: var(--bg); color: var(--text); }
+
+  header {
+    background: var(--primary); color: #fff; text-align: center;
+    padding: 20px 16px 16px;
+  }
+  header img { width: 100%; max-width: 480px; border-radius: 12px; margin-bottom: 12px; }
+  header h1 { font-size: 1.35rem; font-weight: 700; margin-bottom: 4px; }
+  header p { font-size: 0.88rem; opacity: .85; }
+  .deadline-chip {
+    display: inline-block; margin-top: 8px;
+    background: var(--amber); color: #fff;
+    padding: 4px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+  }
+
+  .section-title {
+    text-align: center; padding: 20px 16px 8px;
+    font-size: 1rem; font-weight: 700; color: var(--primary);
+    letter-spacing: .04em;
+  }
+  .note { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px; padding: 0 12px 16px;
+    max-width: 640px; margin: 0 auto;
+  }
+  @media(min-width: 560px){ .grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .card {
+    background: var(--card-bg); border: 1.5px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: box-shadow .2s, border-color .2s;
+  }
+  .card.has-qty { border-color: var(--primary); box-shadow: 0 0 0 2px #c4e8cb; }
+  .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
+  .card-body { padding: 10px 10px 6px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .card-name { font-size: 0.9rem; font-weight: 700; line-height: 1.3; }
+  .badge {
+    display: inline-block; background: var(--badge); color: var(--primary);
+    font-size: 0.7rem; font-weight: 600; padding: 1px 7px; border-radius: 10px; margin-top: 1px;
+  }
+  .card-spec { font-size: 0.75rem; color: var(--muted); }
+  .card-price { font-size: 1rem; font-weight: 700; color: var(--amber); margin-top: auto; padding-top: 4px; }
+
+  .qty-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; padding: 8px 10px 10px;
+  }
+  .qty-btn {
+    width: 34px; height: 34px; border: none;
+    background: var(--primary); color: #fff;
+    font-size: 1.25rem; cursor: pointer; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .qty-btn:hover { background: #154a20; }
+  .qty-num {
+    width: 44px; text-align: center; font-size: 1rem;
+    font-weight: 700; user-select: none;
+  }
+
+  /* 浮動結單列 */
+  #float-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; gap: 12px;
+    box-shadow: 0 -3px 12px rgba(0,0,0,.18);
+    transform: translateY(100%); transition: transform .3s;
+    z-index: 100;
+  }
+  #float-bar.show { transform: translateY(0); }
+  #float-info { font-size: 0.88rem; line-height: 1.4; }
+  #float-info strong { font-size: 1.05rem; }
+  #float-btn {
+    background: var(--amber); color: #fff; border: none;
+    padding: 10px 20px; border-radius: 10px; font-size: 0.95rem;
+    font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
+
+  /* 結單表單 */
+  #order-section {
+    max-width: 480px; margin: 8px auto 80px; padding: 0 16px;
+  }
+  #order-section h2 {
+    font-size: 1rem; font-weight: 700; color: var(--primary);
+    margin: 20px 0 12px; text-align: center;
+  }
+  .field { margin-bottom: 14px; }
+  label { display: block; font-size: 0.85rem; font-weight: 600;
+    color: var(--muted); margin-bottom: 5px; }
+  input, textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+    border-radius: 9px; font-size: 0.95rem; font-family: inherit;
+    background: #fff; color: var(--text);
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--primary); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .summary-box {
+    background: var(--badge); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;
+    font-size: 0.85rem; color: var(--text); line-height: 1.8;
+  }
+  .summary-box .total-line { font-weight: 700; font-size: 1rem; color: var(--amber); margin-top: 4px; }
+
+  #submit-btn {
+    width: 100%; padding: 14px; background: var(--primary); color: #fff;
+    border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: background .15s;
+  }
+  #submit-btn:hover { background: #154a20; }
+  #submit-btn:disabled { background: #9ab59e; cursor: default; }
+
+  /* 成功畫面 */
+  #success-section {
+    display: none; max-width: 480px; margin: 30px auto 80px;
+    padding: 0 16px; text-align: center;
+  }
+  .success-icon { font-size: 3rem; margin-bottom: 8px; }
+  #success-section h2 { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 12px; }
+  .copy-box {
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 14px; text-align: left;
+    white-space: pre-line; font-size: 0.85rem; line-height: 1.8;
+    margin-bottom: 12px;
+  }
+  #copy-btn {
+    background: var(--amber); color: #fff; border: none;
+    padding: 10px 28px; border-radius: 10px; font-size: 0.9rem;
+    font-weight: 700; cursor: pointer;
+  }
+
+  .deadline-warning {
+    text-align: center; background: #fff3cd; color: #7a5700;
+    border: 1px solid #ffe082; border-radius: 8px;
+    padding: 8px 12px; font-size: 0.8rem; margin: 0 16px 8px;
+    max-width: 640px; margin-left: auto; margin-right: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="images/main.avif" alt="BUNDABERG 賓德寶氣泡飲">
+  <h1>🫧 BUNDABERG 賓德寶氣泡飲</h1>
+  <p>同事內部團購 · 12瓶/份 · 免運宅配到府</p>
+  <span class="deadline-chip">⏰ 結單：4/14（一）18:00</span>
+</header>
+
+<p class="section-title">選擇口味</p>
+<p class="note">每份 12 瓶，由揪團者配對成 24 瓶/箱訂購</p>
+
+<div class="deadline-warning" id="deadline-warning" style="display:none">
+  ⚠️ 已超過結單時間，訂購已關閉。
+</div>
+
+<div class="grid" id="product-grid"></div>
+
+<div id="float-bar">
+  <div id="float-info">
+    <div>已選 <strong id="float-qty">0</strong> 份</div>
+    <div>合計 <strong id="float-total">$0</strong></div>
+  </div>
+  <button id="float-btn" onclick="scrollToOrder()">前往結單 →</button>
+</div>
+
+<div id="order-section">
+  <h2>📋 填寫訂購資料</h2>
+  <div class="summary-box" id="summary-box">（尚未選擇商品）</div>
+  <div class="field">
+    <label>你的姓名 *</label>
+    <input type="text" id="name-input" placeholder="請輸入姓名">
+  </div>
+  <div class="field">
+    <label>備註（選填）</label>
+    <textarea id="note-input" placeholder="如：取貨時間、特別需求…"></textarea>
+  </div>
+  <button id="submit-btn" onclick="submitOrder()">送出訂單</button>
+</div>
+
+<div id="success-section">
+  <div class="success-icon">🎉</div>
+  <h2>訂單已送出！</h2>
+  <div class="copy-box" id="copy-text"></div>
+  <button id="copy-btn" onclick="copyText()">一鍵複製訂單明細</button>
+</div>
+
+<script>
+const GAS_URL = 'GAS_WEBAPP_URL_HERE';
+const DEADLINE = new Date('2026-04-14T18:00:00+08:00');
+
+const PRODUCTS = [
+  { id: 'p01_combo',   name: '⭐ 熱銷綜合組A', badge: '6種口味各2瓶', spec: '12瓶/份', price: 960,
+    img: 'images/p01_combo.avif' },
+  { id: 'p05_guava',   name: '⭐ 紅心芭樂',   badge: '熱銷', spec: '12瓶/份', price: 960,
+    img: 'images/p05_guava.avif' },
+  { id: 'p07_ginger',  name: '⭐ 經典薑汁',   badge: '熱銷', spec: '12瓶/份', price: 960,
+    img: 'images/p07_ginger.avif' },
+  { id: 'p08_mango',   name: '⭐ 熱帶芒果',   badge: '熱銷', spec: '12瓶/份', price: 960,
+    img: 'images/p08_mango.avif' },
+  { id: 'p02_grape',   name: '粉紅葡萄柚',   badge: '', spec: '12瓶/份', price: 960,
+    img: 'images/p02_grape.avif' },
+  { id: 'p03_passion', name: '百香果',       badge: '', spec: '12瓶/份', price: 960,
+    img: 'images/p03_passion.avif' },
+  { id: 'p06_peach',   name: '蜜桃',         badge: '', spec: '12瓶/份', price: 960,
+    img: 'images/p06_peach.avif' },
+  { id: 'p04_lemon',   name: '青青檸檬',     badge: '', spec: '12瓶/份', price: 960,
+    img: 'images/p04_lemon.avif' },
+  { id: 'p10_blood',   name: '清新血橙',     badge: '', spec: '12瓶/份', price: 960,
+    img: 'images/p10_blood.avif' },
+  { id: 'p09_sarsap',  name: '沙士',         badge: '', spec: '12瓶/份', price: 960,
+    img: 'images/p09_sarsap.avif' },
+];
+
+const qty = {};
+PRODUCTS.forEach(p => qty[p.id] = 0);
+
+function isExpired() { return new Date() > DEADLINE; }
+
+function renderGrid() {
+  const grid = document.getElementById('product-grid');
+  grid.innerHTML = PRODUCTS.map(p => `
+    <div class="card ${qty[p.id] > 0 ? 'has-qty' : ''}" id="card-${p.id}">
+      <img src="${p.img}" alt="${p.name}" loading="lazy">
+      <div class="card-body">
+        <div class="card-name">${p.name}</div>
+        ${p.badge ? `<div class="badge">${p.badge}</div>` : ''}
+        <div class="card-spec">${p.spec}</div>
+        <div class="card-price">$${p.price.toLocaleString()}</div>
+      </div>
+      <div class="qty-row">
+        <button class="qty-btn" onclick="changeQty('${p.id}',-1)">−</button>
+        <span class="qty-num" id="qty-${p.id}">${qty[p.id]}</span>
+        <button class="qty-btn" onclick="changeQty('${p.id}',1)">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function changeQty(id, delta) {
+  if (isExpired()) return;
+  qty[id] = Math.max(0, qty[id] + delta);
+  document.getElementById(`qty-${id}`).textContent = qty[id];
+  const card = document.getElementById(`card-${id}`);
+  card.classList.toggle('has-qty', qty[id] > 0);
+  updateFloat();
+  updateSummary();
+}
+
+function totalQty() { return Object.values(qty).reduce((a,b)=>a+b,0); }
+function totalPrice() {
+  return PRODUCTS.reduce((s,p) => s + qty[p.id] * p.price, 0);
+}
+
+function updateFloat() {
+  const q = totalQty(), bar = document.getElementById('float-bar');
+  document.getElementById('float-qty').textContent = q;
+  document.getElementById('float-total').textContent = '$' + totalPrice().toLocaleString();
+  bar.classList.toggle('show', q > 0);
+}
+
+function updateSummary() {
+  const box = document.getElementById('summary-box');
+  const lines = PRODUCTS.filter(p => qty[p.id] > 0)
+    .map(p => `• ${p.name} × ${qty[p.id]} 份　$${(p.price * qty[p.id]).toLocaleString()}`);
+  if (!lines.length) { box.innerHTML = '（尚未選擇商品）'; return; }
+  box.innerHTML = lines.join('<br>') +
+    `<div class="total-line">合計：$${totalPrice().toLocaleString()}</div>`;
+}
+
+function scrollToOrder() {
+  document.getElementById('order-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function submitOrder() {
+  if (isExpired()) { alert('已超過結單時間！'); return; }
+  const name = document.getElementById('name-input').value.trim();
+  if (!name) { alert('請輸入姓名！'); return; }
+  if (totalQty() === 0) { alert('請至少選擇一項商品！'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = '送出中…';
+
+  const items = PRODUCTS.filter(p => qty[p.id] > 0)
+    .map(p => `${p.name}×${qty[p.id]}份`).join('、');
+  const note = document.getElementById('note-input').value.trim();
+
+  const params = new URLSearchParams({
+    name, items, total: totalPrice(), note,
+    timestamp: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
+  });
+
+  try {
+    await fetch(GAS_URL, { method: 'POST', body: params, mode: 'no-cors' });
+  } catch(e) {}
+
+  // 顯示成功
+  document.getElementById('order-section').style.display = 'none';
+  document.getElementById('float-bar').classList.remove('show');
+  const detail = PRODUCTS.filter(p=>qty[p.id]>0)
+    .map(p=>`• ${p.name} × ${qty[p.id]} 份　$${(p.price*qty[p.id]).toLocaleString()}`).join('\n');
+  const copyTxt = `${name} 你好！\n訂購明細：\n${detail}\n合計：$${totalPrice().toLocaleString()}${note?'\n備註：'+note:''}`;
+  document.getElementById('copy-text').textContent = copyTxt;
+  const suc = document.getElementById('success-section');
+  suc.style.display = 'block';
+  suc.scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyText() {
+  const txt = document.getElementById('copy-text').textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    document.getElementById('copy-btn').textContent = '✅ 已複製！';
+    setTimeout(() => document.getElementById('copy-btn').textContent = '一鍵複製訂單明細', 2000);
+  });
+}
+
+// 初始化
+if (isExpired()) {
+  document.getElementById('deadline-warning').style.display = 'block';
+  document.getElementById('submit-btn').disabled = true;
+}
+renderGrid();
+</script>
+</body>
+</html>
