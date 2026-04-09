@@ -41,7 +41,7 @@ function getOrCreateSheet() {
 function setupHeaders(sheet) {
   const headers = ['時間戳記', '姓名'];
   PRODUCT_LIST.forEach(p => headers.push(p.name + '\n$' + p.price));
-  headers.push('訂購摘要', '總金額（元）', '備註');
+  headers.push('訂購摘要', '總金額（元）', '備註及回覆');
 
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
 
@@ -81,12 +81,20 @@ function doPost(e) {
     const sheet = getOrCreateSheet();
     const now = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy/MM/dd HH:mm:ss');
 
+    // 自動產生回覆文字
+    const itemLines = [];
+    PRODUCT_LIST.forEach(p => {
+      const q = parseInt(params[p.id] || '0', 10);
+      if (q > 0) itemLines.push(`${p.name} ${q}瓶 單價${p.price}元`);
+    });
+    const replyMsg = `${name}你好，你所訂購的產品如下：${itemLines.join('、')}、總金額：${total}元${note ? '\n備註：' + note : ''}`;
+
     const row = [now, name];
     PRODUCT_LIST.forEach(p => {
       const q = parseInt(params[p.id] || '0', 10);
       row.push(q > 0 ? q : '');
     });
-    row.push(summary, total, note);
+    row.push(summary, total, replyMsg);
 
     sheet.appendRow(row);
 
